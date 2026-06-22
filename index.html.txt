@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aurora Nordics Voyage Tracker</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.321.0/umd/lucide.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0b0f17;
+            --bg-secondary: #161c28;
+            --accent-gold: #dfba73;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --tag-food: #f87171;
+            --tag-spot: #60a5fa;
+            --tag-transit: #34d399;
+            --tag-code: #c084fc;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            padding-bottom: 75px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(223, 186, 115, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--accent-gold);
+            text-transform: uppercase;
+        }
+
+        .header-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Nav Tabs */
+        .nav-tabs {
+            display: flex;
+            background-color: var(--bg-secondary);
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            max-width: 100%;
+            height: 65px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            z-index: 100;
+        }
+
+        .tab-btn {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            background: none;
+            border: none;
+            font-size: 0.75rem;
+            gap: 4px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .tab-btn.active {
+            color: var(--accent-gold);
+        }
+
+        /* Content Sections */
+        .content-section {
+            display: none;
+            padding: 16px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Day Cards */
+        .day-card {
+            background-color: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.04);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding-bottom: 10px;
+            margin-bottom: 14px;
+        }
+
+        .day-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent-gold);
+        }
+
+        .weather-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            background-color: rgba(255,255,255,0.06);
+            padding: 4px 10px;
+            border-radius: 20px;
+            color: var(--text-main);
+        }
+
+        /* Timeline Items */
+        .timeline-item {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 16px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 4px;
+            top: 6px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--accent-gold);
+        }
+
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 18px;
+            bottom: -16px;
+            width: 1px;
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .timeline-item:last-child::after {
+            display: none;
+        }
+
+        .time-tag {
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: var(--text-muted);
+            background: rgba(255,255,255,0.05);
+            padding: 1px 6px;
+            border-radius: 4px;
+            margin-right: 6px;
+        }
+
+        .item-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-top: 2px;
+            display: inline-block;
+        }
+
+        .item-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            background: rgba(0,0,0,0.15);
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-right: 4px;
+            text-transform: uppercase;
+        }
+        .badge-food { background-color: rgba(248, 113, 113, 0.2); color: #f87171; }
+        .badge-spot { background-color: rgba(96, 165, 250, 0.2); color: #60a5fa; }
+        .badge-transit { background-color: rgba(52, 211, 153, 0.2); color: #34d399; }
+        .badge-code { background-color: rgba(192, 132, 252, 0.2); color: #c084fc; border: 1px solid #c084fc; }
+
+        /* Action Buttons */
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background-color: rgba(223, 186, 115, 0.15);
+            color: var(--accent-gold);
+            border: 1px solid rgba(223, 186, 115, 0.3);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            text-decoration: none;
+            margin-top: 6px;
+            cursor: pointer;
+        }
+
+        /* Info Lists & Tables */
+        .info-card {
+            background-color: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 14px;
+        }
+        .info-title {
+            font-weight: 700;
+            color: var(--accent-gold);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            margin-top: 8px;
+        }
+        th, td {
+            text-align: left;
+            padding: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        th { color: var(--text-muted); font-weight: 600; }
+
+        .important-highlight {
+            font-weight: bold;
+            color: #fff;
+            background: linear-gradient(180deg,transparent 60%, rgba(223, 186, 115, 0.3) 40%);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-title">Nordic Aurora Grid</div>
+        <div class="header-subtitle">12/17 - 12/31 • 跨國冬境奇幻之旅</div>
+    </header>
+
+    <main id="sec-itinerary" class="content-section active">
+        
+        <div class="day-card">
+            <div class="day-header">
+                <div class="day-title">12/17 (四) 啟程與香港過境</div>
+                <div class="weather-badge"><i data-lucide="cloud-sun"></i> 香港 18°C / 伊斯坦堡 8°C</div>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">08:10</span><span class="badge badge-transit">航班</span><span class="item-title">長榮航空 TPE → HKG</span></div>
+                <div class="item-desc">分隊（容、堉、愷、米）。抵港後可至市區爽吃喝。行李寄存收費：每小時 HKD 14-15，按日 HKD 165 起。建議使用港鐵遊客全日通 (KKDAY預訂)。</div>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">22:00</span><span class="badge badge-transit">航班</span><span class="item-title">土耳其航空 TPE → IST</span></div>
+                <div class="item-desc">台灣直發分隊（佳、鳴）出發。</div>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">23:15</span><span class="badge badge-transit">航班</span><span class="item-title">土耳其航空 HKG → IST</span></div>
+                <div class="item-desc">香港分隊登機，展開 Stopover Istanbul 航程。</div>
+            </div>
+        </div>
+
+        <div class="day-card">
+            <div class="day-header">
+                <div class="day-title">12/18 (五) 斯德哥爾摩・皇家風華</div>
+                <div class="weather-badge"><i data-lucide="snowflake"></i> 斯德哥爾摩 -1°C</div>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">08:55</span><span class="badge badge-transit">交通</span><span class="item-title">抵達阿蘭達機場 (ARN) T5 → 市區</span></div>
+                <div class="item-desc">搭乘 <span class="important-highlight">FlixBus</span> 前往市區中央車站，提早購票約 USD 12，車程 45 分鐘，班距 30 分鐘。</div>
+                <a class="btn-action" href="https://www.google.com/maps/search/?api=1&query=Stockholm+Cityterminalen" target="_blank"><i data-lucide="map-pin"></i> 導航至巴士總站</a>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">中午</span><span class="badge badge-spot">住宿</span><span class="item-title">ProfilHotels Central 寄放行李</span></div>
+                <div class="item-desc">距離中央車站僅 2 分鐘，對面公車站直達 Viking Line 碼頭。附免費早餐。（芷容、愷漢已訂）</div>
+                <a class="btn-action" href="https://www.google.com/maps/search/?api=1&query=ProfilHotels+Central+Stockholm" target="_blank"><i data-lucide="map-pin"></i> 導航</a>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">下午</span><span class="badge badge-spot">景點</span><span class="item-title">老城區 (Gamla Stan) & 斯德哥爾摩皇宮</span></div>
+                <div class="item-desc"><b>【攻略】</b>漫步中世紀鵝卵石街道，皇宮中午有衛兵交接儀式，充滿巴洛克美學。</div>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">18:00</span><span class="badge badge-food">餐廳</span><span class="item-title">Meatballs for the People</span></div>
+                <div class="item-desc"><b>【必吃美食】</b>被譽為全斯德哥爾摩最頂級的瑞典肉丸，提供鹿肉、麋鹿肉等特殊肉質選擇，搭配經典越橘醬與薯泥。</div>
+                <a class="btn-action" href="https://www.google.com/maps/search/?api=1&query=Meatballs+for+the+People+Stockholm" target="_blank"><i data-lucide="map-pin"></i> 地圖</a>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">20:00</span><span class="badge badge-food">體驗</span><span class="item-title">ICEBAR Stockholm by ICEHOTEL</span></div>
+                <div class="item-desc"><b>【經典必訪】</b>位於 Hotel C 內，全冰塊打造的魔幻酒吧。網上有預約制度，比現場買票划算，附贈一杯極地冰杯調酒。</div>
+            </div>
+        </div>
+
+        <div class="day-card">
+            <div class="day-header">
+                <div class="day-title">12/19 (六) 地鐵藝術與波羅的海郵輪</div>
+                <div class="weather-badge"><i data-lucide="snowflake"></i> 斯德哥爾摩 -2°C</div>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">09:30</span><span class="badge badge-spot">景點</span><span class="item-title">國王花園與市政廳</span></div>
+                <div class="item-desc">國王花園冬季限定露天溜冰場。隨後前往紅磚臨水的<b>斯德哥爾摩市政廳</b>（諾貝爾獎晚宴聖地）。</div>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">11:30</span><span class="badge badge-spot">景點</span><span class="item-title">Rådhuset 地鐵站藝術巡禮</span></div>
+                <div class="item-desc"><b>【奇幻視覺】</b>著名的世界最長地下畫廊，依天然基岩雕琢，呈現原始而震撼的火紅洞穴式美感。</div>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">15:35</span><span class="badge badge-transit">交通</span><span class="item-title">搭乘公車前往 Viking Line 碼頭</span></div>
+                <div class="item-desc">回飯店取行李，在對面公車站搭直達車前往碼頭。</div>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">16:30</span><span class="badge badge-transit">交通</span><span class="item-title">Viking Line 豪華跨國郵輪 (出發)</span></div>
+                <div class="item-desc">斯德哥爾摩 → 赫爾辛基。海上過夜，沉浸在北歐移動城堡。可加購海鮮自助早晚餐。（李佳統一訂房）</div>
+            </div>
+        </div>
+
+        <div class="day-card">
+            <div class="day-header">
+                <div class="day-title">12/20 (日) 抵達設計之都赫爾辛基</div>
+                <div class="weather-badge"><i data-lucide="cloud-snow"></i> 赫爾辛基 -4°C</div>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">10:10</span><span class="badge badge-transit">交通</span><span class="item-title">抵達赫爾辛基 Olympia Terminal</span></div>
+                <div class="item-desc">下船後前往下榻飯店。</div>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">11:00</span><span class="badge badge-spot">住宿</span><span class="item-title">Scandic Helsinki Central Station</span></div>
+                <div class="item-desc">中央車站步行 3 分鐘。附免費豐富早餐、北歐必備<b>私人三溫暖（桑拿）</b>、健身房與自助洗衣烘乾房。</div>
+                <a class="btn-action" href="https://www.google.com/maps/search/?api=1&query=Scandic+Helsinki+Central+Station" target="_blank"><i data-lucide="map-pin"></i> 導航</a>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">12:30</span><span class="badge badge-food">餐廳</span><span class="item-title">老農貿市場 Soppakeittiö 爆料魚湯</span></div>
+                <div class="item-desc"><b>【必吃美食】</b>人氣最高的海鮮鮭魚湯（約 €15），湯頭極度濃郁鮮甜，桌上附帶的手工歐式麵包可<b>無限續加</b>！</div>
+                <a class="btn-action" href="https://www.google.com/maps/search/?api=1&query=Soppakeittiö+Helsinki" target="_blank"><i data-lucide="map-pin"></i> 地圖導航</a>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">14:30</span><span class="badge badge-spot">景點</span><span class="item-title">雙大教堂巡禮：白教堂 & 紅教堂</span></div>
+                <div class="item-desc">赫爾辛基大教堂（白教堂，周邊有許多精品設計與現代家具小店）；烏斯佩斯基大教堂（北歐最大東正教紅教堂）。</div>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">16:30</span><span class="badge badge-food">點心</span><span class="item-title">Cafe Regatta</span></div>
+                <div class="item-desc"><b>【必吃肉桂捲】</b>臨海的超夢幻紅木屋咖啡廳，號稱擁有全赫爾辛基最美味、香氣最濃烈濃郁的現烤肉桂捲。</div>
+            </div>
+        </div>
+
+        <div class="day-card">
+            <div class="day-header">
+                <div class="day-title">12/21 (一) 愛沙尼亞・塔林古城一日遊</div>
+                <div class="weather-badge"><i data-lucide="cloud-snow"></i> 塔林 -3°C</div>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">全天</span><span class="badge badge-spot">景點</span><span class="item-title">搭快輪前往 Tallinn 一日遊</span></div>
+                <div class="item-desc">穿越波羅的海至愛沙尼亞首都。漫步在被列為世界文化遺產的中世紀童話古城牆與石磚路。</div>
+                <a class="btn-action" href="https://www.google.com/maps/search/?api=1&query=Tallinn+Old+Town" target="_blank"><i data-lucide="map-pin"></i> 導航古城</a>
+            </div>
+        </div>
+
+        <div class="day-card">
+            <div class="day-header">
+                <div class="day-title">12/22 (二) 岩石工藝與跨越極光鐵道</div>
+                <div class="weather-badge"><i data-lucide="snowflake"></i> 赫爾辛基 -5°C</div>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">10:00</span><span class="badge badge-spot">景點</span><span class="item-title">Temppeliaukio Church 岩石教堂</span></div>
+                <div class="item-desc">直接在天然巨大岩石內部挖掘而建的現代奇蹟建築，屋頂由巨量銅線環繞，音效極佳。</div>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">12:30</span><span class="badge badge-spot">藝術</span><span class="item-title">Ateneum Art Museum 阿帝紐姆美術館</span></div>
+                <div class="item-desc">芬蘭國家級美術館。世界第一個收藏梵谷作品的博物館，館內設有獨特的自畫像繪製趣味互動體驗。（週一休館）</div>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">17:30</span><span class="badge badge-food">餐廳</span><span class="item-title">Nanapo Sushi 壽司熱炒吃到飽</span></div>
+                <div class="item-desc"><b>【必吃CP大魔王】</b>晚餐每人只要 <span class="important-highlight">€19.9</span>！極厚切鮭魚壽司、亞洲精緻熱炒、現炸物無限量瘋狂供應。</div>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">19:30</span><span class="badge badge-spot">採買</span><span class="item-title">K-Supermarket Postitalo</span></div>
+                <div class="item-desc"><b>【必買伴手禮】</b>採購芬蘭國民 Fazer 巧克力、極地莓果醬，並備妥極光列車上的奢華宵夜零食。</div>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">21:19</span><span class="badge badge-transit">交通</span><span class="item-title">VR 北極圈極光列車 (267次)</span></div>
+                <div class="item-desc">Helsinki → Rovaniemi (座位配置)。<br><span class="badge badge-code">預約號: F3060262525032</span> <span class="badge badge-code">Ref: 20626668260468</span></div>
+            </div>
+        </div>
+
+        <div class="day-card">
+            <div class="day-header">
+                <div class="day-title">12/23 (三) 聖誕老人村與薩里山桑拿</div>
+                <div class="weather-badge"><i data-lucide="cloud-snow"></i> 薩里山 -12°C</div>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">09:58</span><span class="badge badge-transit">交通</span><span class="item-title">抵達羅瓦涅米 Rovaniemi</span></div>
+                <div class="item-desc">車站尋找行李寄存櫃放置重裝。</div>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">11:00</span><span class="badge badge-food">餐廳</span><span class="item-title">Santa's Salmon Place 傳統直火烤鮭魚</span></div>
+                <div class="item-desc"><b>【必吃美食】</b>位於聖誕老人村內的原住民薩米帳篷。極度熱門，務必一開門就去排隊！純木炭直火炙烤的極厚鮭魚排排，鮮嫩多汁，香氣絕倫。</div>
+                <a class="btn-action" href="https://www.google.com/maps/search/?api=1&query=Santas+Salmon+Place+Rovaniemi" target="_blank"><i data-lucide="map-pin"></i> 地圖</a>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">17:05</span><span class="badge badge-transit">交通</span><span class="item-title">長途長途巴士 OB42 前往 Saariselkä</span></div>
+                <div class="item-desc">車資 €53/人（由芷容統一訂票）。預計 20:28 抵達北極圈滑雪聖地薩里山。</div>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">20:45</span><span class="badge badge-spot">住宿</span><span class="item-title">賀蘭特圖公寓 (Holiday Club Apartments #5D23)</span></div>
+                <div class="item-desc">豪華度假公寓：配備三間獨立臥室、大客廳、完整廚房以及<b>專屬芬蘭木造桑拿房</b>。步行可輕易達滑雪中心、大型超市。（Jimmy 已訂）</div>
+            </div>
+        </div>
+
+        <div class="day-card">
+            <div class="day-header">
+                <div class="day-title">12/24 - 12/26 極地白色聖誕嘉年華</div>
+                <div class="weather-badge"><i data-lucide="snowflake"></i> 薩里山 -15°C</div>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">12/24</span><span class="badge badge-spot">體驗</span><span class="item-title">睡到飽、極地哈士奇雪橇奔馳與鎮上採買</span></div>
+                <div class="item-desc">享受銀白森林中的極速快感，下午在村莊體驗歐式聖誕夜溫馨氣氛。</div>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">12/25</span><span class="badge badge-spot">極限</span><span class="item-title">Saariselkä Ski & Sport Resort 滑雪盛宴</span></div>
+                <div class="item-desc">在歐洲最北端的頂級滑雪場，體驗無與倫比的粉雪與長距離雪道。</div>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">12/26</span><span class="badge badge-spot">體驗</span><span class="item-title">Saariselkä Reindeer Farm 馴鹿雪橇深度遊</span></div>
+                <div class="item-desc">包含溫馨接送（2-2.5小時體驗，費用 €147，約共 NTD 6612）。近距離餵食、駕馭聖誕老人的夢幻座騎。</div>
+            </div>
+        </div>
+
+        <div class="day-card">
+            <div class="day-header">
+                <div class="day-title">12/27 (日) 羅瓦涅米巨量美食與臥鋪歸途</div>
+                <div class="weather-badge"><i data-lucide="cloud-snow"></i> 羅瓦涅米 -8°C</div>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">13:25</span><span class="badge badge-transit">交通</span><span class="item-title">極地巴士薩里山 → 羅瓦涅米</span></div>
+                <div class="item-desc">於 17:20 抵達羅瓦涅米。</div>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">18:00</span><span class="badge badge-food">餐廳</span><span class="item-title">Osaka Teppanyaki Rovaniemi 大阪鐵板燒</span></div>
+                <div class="item-desc"><b>【必吃CP王】</b>極地網推超高性價比亞洲料理鐵板燒與壽司吃到飽，寒冬中撫慰亞洲胃的最佳選擇。</div>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">21:00</span><span class="badge badge-transit">交通</span><span class="item-title">VR 北極之星豪華臥鋪列車 (274次)</span></div>
+                <div class="item-desc">Rovaniemi → Helsinki。特別預訂<b>極光臥室艙（內含私人洗手間與淋浴設備）</b>。在極光車窗陪伴下入眠。<br><span class="badge badge-code">預約號: F3060262522565</span> <span class="badge badge-code">Ref: 20626669294459</span></div>
+            </div>
+        </div>
+
+        <div class="day-card">
+            <div class="day-header">
+                <div class="day-title">12/28 - 12/31 拜占庭魔幻伊斯坦堡 & 跨年歸疆</div>
+                <div class="weather-badge"><i data-lucide="sun"></i> 伊斯坦堡 9°C</div>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">12/28</span><span class="badge badge-food">美食</span><span class="item-title">百年傳奇 Ekberg 1852 豐盛早午餐</span></div>
+                <div class="item-desc">09:15 抵達赫爾辛基。至車站地下室（ground floor）寄放行李後，前往百年老店享用高級單點或 €17.8 的極致奢華自助吧。隨後前往機場搭乘 19:00 土航飛往伊斯坦堡。抵達後入住老城區豪華 BNB（獨棟奧斯曼古宅，住三晚贈送單程接送，愷漢已訂）。</div>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">12/29-30</span><span class="badge badge-spot">景點</span><span class="item-title">伊斯坦堡古城史詩探秘</span></div>
+                <div class="item-desc"><b>【朝聖景點】</b>聖索菲亞大教堂、神祕奇幻的<b>地下水宮殿</b>、以及色彩斑斕極度適合街拍的<b>巴拉特區 (Balat)</b>。</div>
+                <a class="btn-action" href="https://www.google.com/maps/search/?api=1&query=Hagia+Sophia+Istanbul" target="_blank"><i data-lucide="map-pin"></i> 聖索菲亞導航</a>
+            </div>
+            <div class="timeline-item">
+                <div><span class="time-tag">12/31</span><span class="badge badge-transit">航班</span><span class="item-title">土耳其航空 IST → TPE (01:55 - 17:40)</span></div>
+                <div class="item-desc">於 12/31 傍晚完美降落台北 T2，全團會合回台灣跨年倒數！</div>
+            </div>
+        </div>
+    </main>
+
+    <section id="sec-logistics" class="content-section">
+        <div class="info-card">
+            <div class="info-title"><i data-lucide="plane"></i> 核心航班與大交通</div>
+            <table>
+                <tr><th>日期</th><th>航段/班次</th><th>時間</th><th>備註</th></tr>
+                <tr><td>12/17</td><td>EVA (TPE-HKG)</td><td>08:10-10:10</td><td>容/堉/愷/米</td></tr>
+                <tr><td>12/17</td><td>THY (HKG-IST)</td><td>23:15-06:10</td><td>香港過境組</td></tr>
+                <tr><td>12/17</td><td>THY (TPE-IST)</td><td>22:00-05:50</td><td>台灣直發組</td></tr>
+                <tr><td>12/18</td><td>THY (IST-ARN)</td><td>08:55-10:40</td><td>抵達瑞典</td></tr>
+                <tr><td>12/19</td><td>Viking Line 郵輪</td><td>16:30-10:10+1</td><td>跨國豪華夜航</td></tr>
+                <tr><td>12/28</td><td>THY (HEL-IST)</td><td>19:00-23:50</td><td>飛返土耳其</td></tr>
+                <tr><td>12/31</td><td>THY (IST-TPE)</td><td>01:55-17:40</td><td>返台跨年</td></tr>
+            </table>
+        </div>
+
+        <div class="info-card">
+            <div class="info-title"><i data-lucide="home"></i> 全程奢華旅宿重點</div>
+            <ul>
+                <li style="margin-bottom: 8px;"><b>斯德哥爾摩 (12/18)：</b>ProfilHotels Central（中央車站2分鐘，對面公車站直達碼頭，芷容組訂）。</li>
+                <li style="margin-bottom: 8px;"><b>赫爾辛基 (12/20)：</b>Scandic Helsinki Central Station（車站3分鐘，自帶北歐桑拿、洗衣房）。</li>
+                <li style="margin-bottom: 8px;"><b>薩里山 (12/23-27)：</b>賀蘭特圖度假公寓 #5D23（3房1衛+專屬獨立Sauna，鄰近滑雪場、超市，Jimmy訂）。</li>
+                <li style="margin-bottom: 8px;"><b>伊斯坦堡 (12/28-31)：</b>老城區獨棟奧斯曼式雙層別墅 BNB（住滿三晚加贈單程機場接駁，愷漢訂）。</li>
+            </ul>
+        </div>
+    </section>
+
+    <section id="sec-budget" class="content-section">
+        <div class="info-card">
+            <div class="info-title"><i data-lucide="wallet"></i> 團體已付預算/代墊明細表</div>
+            <table>
+                <tr><th>項目說明</th><th>預估金額 / 人</th><th>負責代訂人</th></tr>
+                <tr><td>斯德哥爾摩 Profil Hotel</td><td>房價依訂單</td><td>芷容 / 愷漢</td></tr>
+                <tr><td>波羅的海 Viking Line 郵輪</td><td>官網特惠價</td><td>李佳 (統一訂房)</td></tr>
+                <tr><td>VR 列車 (去程座位) 12/22</td><td>車票已開</td><td>Ref: 20626668260468</td></tr>
+                <tr><td>長途巴士 (Rovaniemi - Saariselkä)</td><td>€53 (約 NT$2,014)</td><td>芷容 (統一訂票)</td></tr>
+                <tr><td>薩里山 Reindeer Farm 馴鹿體驗</td><td>€147 (約 NT$6,612)</td><td>全團預定項</td></tr>
+                <tr><td>VR 列車 (回程豪華包艙) 12/27</td><td>車票已開</td><td>Ref: 20626669294459</td></tr>
+                <tr><td>伊斯坦堡奧斯曼風 BNB</td><td>3晚(含單程接送)</td><td>愷漢</td></tr>
+            </table>
+        </div>
+        
+        <div class="info-card">
+            <div class="info-title"><i data-lucide="phone-call"></i> 緊急聯絡與極地重要資訊</div>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">
+                • 歐洲緊急求救電話：<b>112</b><br>
+                • 駐芬蘭台北代表處：+358 9 682 9380<br>
+                • 外交部旅外國人急難救助專線：+886 800-085-095<br>
+                • 備註：北極圈冬季低溫約介於 -5°C 至 -20°C，建議準備全套防水防滑雪鞋、羊毛發熱衣物與相機備用電池。
+            </p>
+        </div>
+    </section>
+
+    <nav class="nav-tabs">
+        <button class="tab-btn active" onclick="switchTab('sec-itinerary', this)">
+            <i data-lucide="calendar"></i>
+            <span>每日行程</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('sec-logistics', this)">
+            <i data-lucide="compass"></i>
+            <span>航班住宿</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('sec-budget', this)">
+            <i data-lucide="dollar-sign"></i>
+            <span>預算票券</span>
+        </button>
+    </nav>
+
+    <script>
+        // 初始化 Lucide 圖標
+        lucide.createIcons();
+
+        // 原生級分頁切換邏輯
+        function switchTab(sectionId, element) {
+            document.querySelectorAll('.content-section').forEach(sec => {
+                sec.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.getElementById(sectionId).classList.add('active');
+            element.classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
